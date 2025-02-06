@@ -1,15 +1,14 @@
 import type { GenerateAiImage } from 'wasp/server/operations'
 import { HttpError } from 'wasp/server'
 import Replicate from 'replicate'
-import OpenAI from 'openai'
+import { GoogleGenerativeAI } from "@google/generative-ai"
 
 const replicate = new Replicate({
   auth: process.env.REPLICATE_API_KEY!,
 })
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-})
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!)
+const model = genAI.getGenerativeModel({ model: "gemini-pro" })
 
 export const generateAiImage: GenerateAiImage<{ prompt: string; style: string }, { imageUrl: string }> = async (
   { prompt, style },
@@ -20,41 +19,49 @@ export const generateAiImage: GenerateAiImage<{ prompt: string; style: string },
   }
 
   try {
-    // Translate Vietnamese prompt to English
-    const translation = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'Translate the following Vietnamese text to English. Keep the meaning same, but make it descriptive and suitable for AI image generation.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ]
-    })
+    // Translate Vietnamese prompt to English using Gemini
+    const result = await model.generateContent([
+      `Translate the following Vietnamese text to English and create a prompt for ${style === 'line-art' ? 'a simple black and white line art drawing' : 'a simple illustration'} style: ${prompt}`
+    ])
+    const englishPrompt = result.response.text();
+    console.log('English prompt: ', englishPrompt);
 
-    const englishPrompt = translation.choices[0].message.content || ''
-
-    // Generate image using Replicate
+    // Generate image using Replicate with Flux
     const output = await replicate.run(
-      'stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b',
-      {
+      "black-forest-labs/flux-schnell",
+      { 
         input: {
           prompt: englishPrompt,
-          scheduler: style === 'line-art' ? 'K_EULER' : 'DPMSolverMultistep',
+          go_fast: true,
+          megapixels: "1",
           num_outputs: 1,
-          guidance_scale: style === 'line-art' ? 9 : 7,
-          negative_prompt: style === 'line-art' 
-            ? 'color, painting, detailed background'
-            : 'text, watermark, low quality',
+          aspect_ratio: "1:1",
+          output_format: "webp",
+          output_quality: 80,
+          num_inference_steps: 4,
+          negative_prompt: "text, watermark, low quality",
         }
       }
     )
 
+    if (!output) {
+      throw new Error('No image was generated')
+    }
+
+    console.log('Output: ' , output);
+
+    const imageUrls: string[] = []
+    for (const [_, item] of Object.entries(output)) {
+      imageUrls.push(item as string)
+    }
+
+    if (!imageUrls.length) {
+      throw new Error('No image was generated')
+    }
+
+    console.log('Generated image URL:', imageUrls[0])
     return {
-      imageUrl: (output as any)[0],
+      imageUrl: imageUrls[0],
     }
   } catch (error: any) {
     console.error('AI Image generation error:', error)
