@@ -27,6 +27,7 @@ export const generateAiImage: GenerateAiImage<{ prompt: string; style: string },
     console.log('English prompt: ', englishPrompt);
 
     // Generate image using Replicate with Flux
+    // just change something
     const output = await replicate.run(
       "black-forest-labs/flux-schnell",
       { 
