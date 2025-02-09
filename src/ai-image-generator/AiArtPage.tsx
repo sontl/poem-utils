@@ -34,20 +34,23 @@ export default function AiArtPage() {
   }
 
   return (
-    <div className='py-10 lg:mt-10'>
+    <div className='min-h-screen py-16 bg-gradient-to-b from-purple-50 to-white dark:from-gray-900 dark:to-gray-800'>
       <div className='mx-auto max-w-7xl px-6 lg:px-8'>
         <div className='mx-auto max-w-4xl text-center'>
-          <h2 className='mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl dark:text-white'>
-            <span className='text-purple-600'>AI</span> Art Generator
+          <h2 className='mt-2 text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent sm:text-5xl'>
+            AI Art Generator
           </h2>
+          <p className='mt-4 text-lg text-gray-600 dark:text-gray-300'>
+            Transform your ideas into stunning artwork with AI
+          </p>
         </div>
         
-        <div className='my-8 border rounded-3xl border-gray-900/10 dark:border-gray-100/10'>
-          <div className='sm:w-[90%] md:w-[70%] lg:w-[50%] py-10 px-6 mx-auto my-8 space-y-10'>
-            <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
+        <div className='mt-12 backdrop-blur-xl bg-white/50 dark:bg-gray-800/50 border rounded-3xl border-gray-200 dark:border-gray-700 shadow-xl'>
+          <div className='sm:w-[90%] md:w-[70%] lg:w-[50%] py-10 px-6 mx-auto space-y-10'>
+            <form onSubmit={handleSubmit} className='flex flex-col gap-8'>
               <div className='space-y-4'>
-                <label className='block text-sm font-medium text-gray-700 dark:text-gray-300'>
-                  Chọn phong cách
+                <label className='block text-lg font-semibold text-gray-800 dark:text-gray-200'>
+                  Choose Style
                 </label>
                 <div className='grid grid-cols-2 gap-4'>
                   {artStyles.map((style) => (
@@ -56,13 +59,14 @@ export default function AiArtPage() {
                       type='button'
                       onClick={() => setSelectedStyle(style.id)}
                       className={cn(
-                        'rounded-lg p-4 border-2 transition-all duration-200',
+                        'rounded-xl p-6 border-2 transition-all duration-300 hover:scale-105',
+                        'shadow-lg hover:shadow-xl',
                         selectedStyle === style.id 
-                          ? 'border-purple-500 bg-purple-50' 
-                          : 'border-gray-200 hover:border-purple-300'
+                          ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30' 
+                          : 'border-gray-200 hover:border-purple-300 dark:border-gray-700'
                       )}
                     >
-                      <span className='text-sm font-medium text-gray-900 dark:text-white'>
+                      <span className='text-base font-medium bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent'>
                         {style.name}
                       </span>
                     </button>
@@ -71,14 +75,16 @@ export default function AiArtPage() {
               </div>
 
               <div className='space-y-4'>
-                <label className='block text-sm font-medium text-gray-700 dark:text-gray-300'>
-                  Mô tả của bạn (tiếng Việt)
+                <label className='block text-lg font-semibold text-gray-800 dark:text-gray-200'>
+                  Your Description (Vietnamese)
                 </label>
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  rows={3}
-                  className='block w-full rounded-md border border-gray-200 bg-[#f5f0ff] shadow-md focus:ring-purple-500 focus:border-purple-500 transition-all duration-200'
+                  rows={4}
+                  className='block w-full rounded-xl border border-gray-200 bg-white/70 dark:bg-gray-800/70 shadow-inner
+                    focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200
+                    dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-400'
                   placeholder='Ví dụ: Một con rồng đang bay trên thành phố cổ...'
                 />
               </div>
@@ -87,33 +93,42 @@ export default function AiArtPage() {
                 type='submit'
                 disabled={!prompt || isGenerating}
                 className={cn(
-                  'flex items-center justify-center gap-2 px-6 py-3 text-white font-medium bg-purple-600 rounded-md hover:bg-purple-700 transition-all',
-                  'disabled:opacity-50 disabled:cursor-not-allowed'
+                  'group relative flex items-center justify-center gap-2 px-8 py-4 text-white font-medium',
+                  'bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl',
+                  'shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]',
+                  'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
                 )}
               >
                 {isGenerating ? (
                   <>
-                    <CgSpinner className='animate-spin' />
-                    Đang tạo ảnh...
+                    <CgSpinner className='animate-spin-2 text-xl' />
+                    <span>Creating Magic...</span>
                   </>
                 ) : (
-                  'Tạo ảnh ngay'
+                  <>
+                    <span>Generate Artwork</span>
+                    <span className='group-hover:translate-x-1 transition-transform duration-200'>→</span>
+                  </>
                 )}
               </button>
 
               {error && (
-                <div className='text-red-500 text-sm text-center'>{error}</div>
+                <div className='p-4 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm text-center'>
+                  {error}
+                </div>
               )}
             </form>
 
             {generatedImage && (
-              <div className='mt-8'>
-                <h3 className='text-lg font-semibold mb-4'>Tác phẩm của bạn</h3>
-                <div className='rounded-xl overflow-hidden border-2 border-purple-100'>
+              <div className='mt-12 animate-fade-in'>
+                <h3 className='text-xl font-semibold mb-6 text-gray-800 dark:text-gray-200'>Your Masterpiece</h3>
+                <div className='rounded-2xl overflow-hidden border-2 border-purple-200 dark:border-purple-800 shadow-2xl 
+                  transition-transform duration-300 hover:scale-[1.02]'>
                   <img 
                     src={generatedImage} 
                     alt="Generated artwork" 
                     className='w-full h-auto object-cover'
+                    loading="lazy"
                   />
                 </div>
               </div>
